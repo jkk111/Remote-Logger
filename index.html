@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <script type="text/javascript" src="//localhost:8080/socket.io/socket.io.js"></script>
+  <script type="text/javascript" src="//localhost:8080/remote_client.js"></script>
+  <script type="text/javascript">
+    var remote;
+    document.addEventListener("DOMContentLoaded", function() {
+      remote = initiateRemoteLogger({
+        key: "abcdefg",
+        long: true
+      });
+      remote.log("Startup", "is it working?")
+    })
+  </script>
+</head>
+<body>
+
+</body>
+</html>
