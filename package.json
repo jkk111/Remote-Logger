@@ -1,0 +1,24 @@
+{
+  "name": "remote-logger",
+  "version": "1.0.0",
+  "description": "",
+  "main": "remote_server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jkk111/Remote-Logger.git"
+  },
+  "author": "jkk111",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jkk111/Remote-Logger/issues"
+  },
+  "homepage": "https://github.com/jkk111/Remote-Logger#readme",
+  "dependencies": {
+    "express": "^4.13.4",
+    "rethinkdb": "^2.3.0",
+    "socket.io": "^1.4.5"
+  }
+}

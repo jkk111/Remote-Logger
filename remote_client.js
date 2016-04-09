@@ -1,10 +1,11 @@
-var socket, remote, long, connected = false;
+var socket, remote, long, connected = false, key;
 var levels = ["info", "log", "warn", "debug"];
 function initiateRemoteLogger(options) {
   options = options || {};
   long = options.long || false;
   remote = {}
   remote.pending = [];
+  key = optiosn.key;
   host = options.host || "http://localhost:8080";
   socket = io(host);
   socket.on("connect", connectHandler);
@@ -70,9 +71,7 @@ function registerErrorHandler() {
 }
 
 function connectHandler() {
-  levels.forEach(function(level) {
-    socket.emit(level, level + "test");
-  })
+  socket.emit("auth", key);
   if(!connected) {
     socket.emit("info", "Connected at: " + new Date());
   }
