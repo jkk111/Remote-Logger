@@ -1,6 +1,8 @@
 var express = require("express");
 var app = express();
 app.use(express.static(__dirname));
+var clc = require("cli-color");
+var tag = clc.magenta;
 var http = require("http").createServer(app).listen(8080);
 var conf;
 try {
@@ -16,7 +18,8 @@ conf.socketsCanStreamToRoom = true;
 
 var io = require("socket.io")(http);
 var levels = ["info", "log", "warn", "debug", "error"];
-var baseEvents = ["disco", "conn", "recon"].concat(levels);
+var connEvents = ["disco", "conn", "recon"];
+var baseEvents = connEvents.concat(levels);
 
 io.on("connection", function(socket) {
   console.log(socket.request.headers.referer);
@@ -31,37 +34,44 @@ io.on("connection", function(socket) {
     /*
      * {
      *   type: ["logger", "listener"]
+     *   reconnect: <Boolean>
      *   apiKey: <String>
      * }
      */
+    console.log(data);
     clearTimeout(authTimer);
-    roomKey = data.apikey;
-    var auth = true;
+    roomKey = data.key;
+    var auth = true; // Add in actual authentication, will probably require an async callback
     if(auth) {
       socket.isAuthenticated = true;
       socket.canStreamToRoom = conf.socketsCanStreamToRoom;
       socket.leave(socket.id);
-      socket.join(apikey);
+      socket.join(data.key);
       socket.emit("auth", true);
     } else {
       socket.disconnect();
     }
-  })
+  });
+
+
 
   socket.on("logEvent", function(data) {
     /*
      * {
-     *   type: ["log", "info", "debug", "warn", "error", "disco", "conn", "recon"],
+     *   type: ["log", "info", "debug", "warn", "error", "disco", "conn", "recon", "custom"],
+     *   custom: <String>,
      *   tag: <String>,
      *   arguments: (...<Object>)
      * }
      */
     if(socket.isAuthenticated) {
-      pushToDb(data.type, args);
+      pushToDb(data.type, data.arguments || data.ts);
       if(socket.canStreamToRoom)
         io.to(roomKey).emit("logEvent", data);
     } else {
-      socket.emit("auth", false);
+      console.log(clc.red("Rejecting message from: %d"), socket.id);
+      socket.emit("auth", false); // "This should never happen"
+      socket.emit("reject", data); // However if it does happen, make sure the client has another chance to send the data
     }
   });
 
@@ -73,6 +83,11 @@ function validLevel(level) {
   return levels.indexOf(level) != -1;
 }
 
+function isConnEvent(event) {
+  return connEvents.indexOf(event) != -1;
+}
+
 function pushToDb(level, args) {
   console.log("database not implemented yet, dropping data");
+  console.log(clc.yellow(level), args);
 }

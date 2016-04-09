@@ -1,27 +1,26 @@
-var socket, remote, long, connected = false, key;
-var levels = ["info", "log", "warn", "debug"];
+var socket, remote, long, connected = false, key, firstId, pending;
+var levels = ["info", "log", "warn", "debug", "error"];
+
 function initiateRemoteLogger(options) {
   options = options || {};
   long = options.long || false;
   remote = {}
-  remote.pending = [];
-  key = optiosn.key;
+  pending = [];
+  key = options.key;
   host = options.host || "http://localhost:8080";
   socket = io(host);
   socket.on("connect", connectHandler);
-  socket.on("disconnect", disconnectHandler)
+  socket.on("disconnect", disconnectHandler);
+  socket.on("reject", rejectHandler);
   levels.forEach(registerLevel);
-  registerErrorHandler();
-  return remote;
-}
-
-function objArrToArr(obj) {
-  var keys = Object.keys(obj);
-  var arr = [];
-  for(var i = 0 ; i < keys.length; i++) {
-    arr.push(obj[keys[i]]);
+  if(options.customLevels) {
+    if(typeof options.customLevels === "string")
+      options.customLevels = [options.customLevels];
+    if(!Array.isArray(options.customLevels))
+      throw new Error("customLevels Must be an array!");
+    options.customLevels.forEach(registerLevel);
   }
-  return arr;
+  return remote;
 }
 
 function registerLevel(item) {
@@ -33,15 +32,27 @@ function registerLevel(item) {
       throw new Error("No tag specified!");
     }
     var sendObj = generateSendObj.apply(this, arguments);
-    if(socket.connected) {
-      socket.emit(item, sendObj);
+    if(validLevel(item)) {
+      sendObj.type = item;
     }
     else {
-      remote.pending.push({type: item, data: sendObj });
-      if(long)
+      sendObj.type = "custom";
+      sendObj.custom = item;
+    }
+    if(socket.connected) {
+      socket.emit("logEvent", sendObj);
+    }
+    else {
+      pending.push(sendObj);
+      if(long) {
         socket.connect();
+      }
     }
   }
+}
+
+function validLevel(level) {
+  return levels.indexOf(level) != -1;
 }
 
 function generateSendObj() {
@@ -52,36 +63,19 @@ function generateSendObj() {
   return sendObj;
 }
 
-function registerErrorHandler() {
-  remote.error = function() {
-    if(arguments.length < 2) {
-      throw new Error("Too Few arguments");
-    } else if(typeof arguments[0] != "string") {
-      throw new Error("No tag specified!");
-    }
-    var sendObj = generateSendObj.apply(this, arguments);
-    if(socket.connected) {
-      socket.emit("errorEvent", sendObj);
-    } else {
-      remote.pending.push({type: "errorEvent", data: sendObj});
-      if(long)
-        socket.connect();
-    }
-  }
-}
-
 function connectHandler() {
-  socket.emit("auth", key);
+  socket.emit("auth", { key: key, type: "logger", reconnect: connected });
+  var connTime = new Date();
   if(!connected) {
-    socket.emit("info", "Connected at: " + new Date());
+    socket.emit("logEvent", { type: "conn", ts: connTime.getTime() });
   }
   else {
-    socket.emit("info", "Reconnected at: " + new Date());
+    socket.emit("logEvent", { type: "recon", ts: connTime.getTime() });
   }
-  if(remote.pending.length > 0) {
-    while(remote.pending.length > 0) {
-      var item = remote.pending.splice(0, 1)[0];
-      socket.emit(item.type, item.data);
+  if(pending.length > 0) {
+    while(pending.length > 0) {
+      var item = pending.splice(0, 1)[0];
+      socket.emit("logEvent", item);
     }
   }
   connected = true;
@@ -89,5 +83,18 @@ function connectHandler() {
 
 function disconnectHandler() {
   var discoTime = new Date();
-  remote.pending.push({type: "disconnectEvent", data: discoTime.getTime() });
+  pending.push({type: "disco", ts: discoTime.getTime() });
+}
+
+function objArrToArr(obj) {
+  var keys = Object.keys(obj);
+  var arr = [];
+  for(var i = 0 ; i < keys.length; i++) {
+    arr.push(obj[keys[i]]);
+  }
+  return arr;
+}
+
+function rejectHandler(data) {
+  pending.push(data);
 }

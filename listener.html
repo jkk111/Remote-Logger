@@ -3,19 +3,38 @@
 <head>
   <title></title>
   <script type="text/javascript" src="//localhost:8080/socket.io/socket.io.js"></script>
-  <script type="text/javascript" src="//localhost:8080/remote_client.js"></script>
-  <script type="text/javascript">
-    var remote;
+  <script>
+    var socket, logs;
     document.addEventListener("DOMContentLoaded", function() {
-      remote = initiateRemoteLogger({
-        key: "abcdefg",
-        long: true
+      logs = document.getElementById("logs");
+      socket = io("http://localhost:8080");
+
+
+      socket.on("connect", function() {
+        socket.emit("auth", { key: "abcdefg", type: "listener", reconnect: false });
       });
-      remote.log("Startup", "is it working?")
-    })
+
+      socket.on("logEvent", function(data) {
+        if(validLevel(data.type)) {
+          console[data.type].apply(console, data.arguments);
+        } else {
+          console.log.apply(console, data.arguments);
+        }
+        var el = document.createElement("li");
+        logs.appendChild(el);
+        el.innerHTML = JSON.stringify(data);
+      })
+
+      var levels = ["info", "log", "warn", "debug", "error"];
+      function validLevel(level) {
+        return levels.indexOf(level) != -1;
+      }
+    });
   </script>
 </head>
 <body>
+  <ol id="logs">
 
+  </ol>
 </body>
 </html>
