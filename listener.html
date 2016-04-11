@@ -2,17 +2,21 @@
 <html>
 <head>
   <title></title>
+  <style>
+    img, span {
+      height: 1em;
+    }
+    span {
+      vertical-align: super;
+    }
+  </style>
   <script type="text/javascript" src="//localhost:8080/socket.io/socket.io.js"></script>
+  <script type="text/javascript" src="eventIcons.js"></script>
   <script>
     var socket, logs;
     document.addEventListener("DOMContentLoaded", function() {
       logs = document.getElementById("logs");
-      socket = io("http://localhost:8080");
-
-
-      socket.on("connect", function() {
-        socket.emit("auth", { key: "abcdefg", type: "listener", reconnect: false });
-      });
+      socket = io("http://localhost:8080").disconnect();
 
       socket.on("logEvent", function(data) {
         if(validLevel(data.type)) {
@@ -21,18 +25,35 @@
           console.log.apply(console, data.arguments);
         }
         var el = document.createElement("li");
+        var icon = document.createElement("img");
+        icon.src = "warning-icon.png";
+        console.log(eventIcons);
+        console.log(eventIcons[data.type])
+        el.appendChild(icon);
+        var text = document.createElement("span");
+        text.innerHTML = JSON.stringify(data);
+        el.appendChild(text);
         logs.appendChild(el);
-        el.innerHTML = JSON.stringify(data);
-      })
+        // el.innerHTML = JSON.stringify(data);
+      });
 
       var levels = ["info", "log", "warn", "debug", "error"];
       function validLevel(level) {
         return levels.indexOf(level) != -1;
       }
     });
+
+    function login() {
+      var user = document.getElementById("username").value;
+      var pass = document.getElementById("pass").value;
+      socket.connect().emit("auth", { key: "abcdefg", type: "listener", reconnect: false });
+    }
   </script>
 </head>
 <body>
+  <label>Name: </label><input id="username" type="text">
+  <label>Pass: </label><input id="pass" type="password">
+  <button onclick="login()">Login</button>
   <ol id="logs">
 
   </ol>

@@ -10,7 +10,6 @@ function initiateRemoteLogger(options) {
   host = options.host || "http://localhost:8080";
   socket = io(host);
   socket.on("connect", connectHandler);
-  socket.on("disconnect", disconnectHandler);
   socket.on("reject", rejectHandler);
   levels.forEach(registerLevel);
   if(options.customLevels) {
@@ -79,11 +78,6 @@ function connectHandler() {
     }
   }
   connected = true;
-}
-
-function disconnectHandler() {
-  var discoTime = new Date();
-  pending.push({type: "disco", ts: discoTime.getTime() });
 }
 
 function objArrToArr(obj) {

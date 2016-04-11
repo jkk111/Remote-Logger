@@ -9,7 +9,6 @@ try {
   conf = JSON.parse(fs.readFileSync("config.json", "utf8"));
 } catch(e) {
   console.error("Could not open \"config.json\"");
-  // process.exit();
 }
 
 if(!conf)
@@ -38,7 +37,6 @@ io.on("connection", function(socket) {
      *   apiKey: <String>
      * }
      */
-    console.log(data);
     clearTimeout(authTimer);
     roomKey = data.key;
     var auth = true; // Add in actual authentication, will probably require an async callback
@@ -53,6 +51,9 @@ io.on("connection", function(socket) {
     }
   });
 
+  socket.on("disconnect", function() {
+    io.emit("logEvent", { type: "disco", ts: new Date().getTime()})
+  })
 
 
   socket.on("logEvent", function(data) {
@@ -89,5 +90,5 @@ function isConnEvent(event) {
 
 function pushToDb(level, args) {
   console.log("database not implemented yet, dropping data");
-  console.log(clc.yellow(level), args);
+  console.log(clc.magenta.underline(level), args);
 }
