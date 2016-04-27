@@ -2,16 +2,57 @@
 <html>
 <head>
   <title></title>
-  <script type="text/javascript" src="//localhost:8080/socket.io/socket.io.js"></script>
-  <script type="text/javascript" src="//localhost:8080/remote_client.js"></script>
+  <script type="text/javascript" src="//localhost:8082/socket.io/socket.io.js"></script>
+  <script type="text/javascript" src="//localhost:8082/remote_client.js"></script>
   <script type="text/javascript">
     var remote;
     document.addEventListener("DOMContentLoaded", function() {
-      remote = initiateRemoteLogger({
+      remote = logger.initiateRemoteLogger({
         key: "abcdefg",
-        long: true
+        long: true,
+        canSendTagOnly: true,
+        customLevels: ["fuck", "this", "shit"],
+        verbose: true
       });
-      remote.log("Startup", "is it working?")
+      document.addEventListener("mousemove", function(e) {
+        remote.log("mousemove", handleEvent(e));
+      })
+      remote.log("Startup", "is it working?");
+      function getClassString(list, joiner) {
+        return `.${list.toString().replace(/ /g, ".")}`
+      }
+      function handleEvent(e) {
+        var event = {}
+        if(e.srcElement) {
+          event.srcElement = e.srcElement.localName;
+          if(e.srcElement.id && e.srcElement.id != "") {
+            event.srcElement += `#${e.srcElement.id}`
+          }
+          if(e.srcElement.classList.length > 0) {
+            event.srcElement += `${getClassString(e.srcElement.classList, ".")}`
+          }
+        }
+        for(var p in e) {
+          if(typeof e[p] === "object") {
+            safeStringifyObject(e[p]);
+          } else if(typeof e[p] != "function") {
+            event[p] = e[p]
+          }
+        }
+        return event;
+      }
+      function safeStringifyObject(e) {
+        seen = [];
+        JSON.stringify(e, function(key, val) {
+           if (val != null && typeof val == "object") {
+                if (seen.indexOf(val) >= 0) {
+                    return;
+                }
+                seen.push(val);
+            }
+            return val;
+        });
+      }
     })
   </script>
 </head>

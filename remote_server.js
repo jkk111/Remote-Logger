@@ -3,7 +3,16 @@ var app = express();
 app.use(express.static(__dirname));
 var clc = require("cli-color");
 var tag = clc.magenta;
-var http = require("http").createServer(app).listen(8080);
+var r = require("rethinkdb"), conn;
+var conn, http, io;
+var MIN_SKIP = 100;
+r.connect({user: "admin", password: "", db: "logs"}, function(err, connection) {
+  if(err) return console.log(err);
+  conn = connection;
+  http = require("http").createServer(app).listen(8082);
+  io = require("socket.io")(http);
+  io.on("connection", handleConn);
+})
 var conf;
 try {
   conf = JSON.parse(fs.readFileSync("config.json", "utf8"));
@@ -14,13 +23,11 @@ try {
 if(!conf)
   conf = {};
 conf.socketsCanStreamToRoom = true;
-
-var io = require("socket.io")(http);
 var levels = ["info", "log", "warn", "debug", "error"];
 var connEvents = ["disco", "conn", "recon"];
 var baseEvents = connEvents.concat(levels);
-
-io.on("connection", function(socket) {
+function handleConn(socket) {
+  io.to("kek").emit("kekklez", "Lol");
   console.log(socket.request.headers.referer);
   var logged = 0;
   var roomKey;
@@ -60,13 +67,14 @@ io.on("connection", function(socket) {
     /*
      * {
      *   type: ["log", "info", "debug", "warn", "error", "disco", "conn", "recon", "custom"],
-     *   custom: <String>,
+     *   custom: <String>?,
      *   tag: <String>,
      *   arguments: (...<Object>)
      * }
      */
     if(socket.isAuthenticated) {
-      pushToDb(data.type, data.arguments || data.ts);
+      console.log(data);
+      pushToDb((data.type === "custom" ? data.custom : data.type), data, roomKey);
       if(socket.canStreamToRoom)
         io.to(roomKey).emit("logEvent", data);
     } else {
@@ -75,10 +83,7 @@ io.on("connection", function(socket) {
       socket.emit("reject", data); // However if it does happen, make sure the client has another chance to send the data
     }
   });
-
-
-
-})
+}
 
 function validLevel(level) {
   return levels.indexOf(level) != -1;
@@ -88,7 +93,19 @@ function isConnEvent(event) {
   return connEvents.indexOf(event) != -1;
 }
 
-function pushToDb(level, args) {
-  console.log("database not implemented yet, dropping data");
-  console.log(clc.magenta.underline(level), args);
+function pushToDb(level, data, roomKey) {
+  var serverTime = new Date().getTime();
+  console.log(clc.magenta.underline(level), clc.yellow(data.tag), data.args, serverTime);
+  r.table(roomKey).insert({
+    level: level,
+    tag: data.tag || "ERR_NO_TAG",
+    connId: data.connId,
+    args: data.arguments || [],
+    client_ts: data.ts,
+    server_ts: serverTime
+  }).run(conn, function(err, data) {
+    r.table(roomKey).orderBy(r.desc("server_ts")).skip(MIN_SKIP).delete().run(conn, function(err2, data2) {
+      console.log(err, err2, data, data2)
+    })
+  })
 }
