@@ -3,59 +3,150 @@
 <head>
   <title></title>
   <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background-color: #636363;
+    }
     img, span {
       height: 1em;
     }
     span {
       vertical-align: super;
     }
-  </style>
-  <script type="text/javascript" src="//localhost:8080/socket.io/socket.io.js"></script>
-  <script type="text/javascript" src="eventIcons.js"></script>
-  <script>
-    var socket, logs;
-    document.addEventListener("DOMContentLoaded", function() {
-      logs = document.getElementById("logs");
-      socket = io("http://localhost:8080").disconnect();
-
-      socket.on("logEvent", function(data) {
-        if(validLevel(data.type)) {
-          console[data.type].apply(console, data.arguments);
-        } else {
-          console.log.apply(console, data.arguments);
-        }
-        var el = document.createElement("li");
-        var icon = document.createElement("img");
-        icon.src = "warning-icon.png";
-        console.log(eventIcons);
-        console.log(eventIcons[data.type])
-        el.appendChild(icon);
-        var text = document.createElement("span");
-        text.innerHTML = JSON.stringify(data);
-        el.appendChild(text);
-        logs.appendChild(el);
-        // el.innerHTML = JSON.stringify(data);
-      });
-
-      var levels = ["info", "log", "warn", "debug", "error"];
-      function validLevel(level) {
-        return levels.indexOf(level) != -1;
-      }
-    });
-
-    function login() {
-      var user = document.getElementById("username").value;
-      var pass = document.getElementById("pass").value;
-      socket.connect().emit("auth", { key: "abcdefg", type: "listener", reconnect: false });
+    #header {
+      height: 100px;
+      width: 100%;
+      text-align: center;
+      background-color: #272729;
+      background-image: -webkit-linear-gradient(bottom, rgba(0,0,0,.07) 0%, rgba(255,255,255,.07) 100%);
     }
-  </script>
-</head>
-<body>
-  <label>Name: </label><input id="username" type="text">
-  <label>Pass: </label><input id="pass" type="password">
-  <button onclick="login()">Login</button>
-  <ol id="logs">
+    #header-button-wrapper {
+      height: 100%;
+      display: table;
+      text-align: center;
+      max-width: 100%;
+      min-width: 50%;
+      margin: 0 auto;
+      vertical-align: middle;
+    }
+    #info {
+      background-color: #eee;
+      height: 100px;
+      border-bottom: thin solid #ccc;
+    }
+    #logs {
+      width: 100%;
+      box-sizing: border-box;
+      word-wrap: break-word;
+      font-size: 16px;
+      overflow: auto
+    }
+    .logline {
+      white-space: normal;
+    }
+    .logline{
+      padding: 0.5em 0;
+      margin: 0;
+    }
+    pre.expanded {
+      white-space: pre;
+    }
+    #logs-wrapper {
+      height: 50%;
+      margin: 20px 40px;
+      overflow: auto;
+      background-color: #ddd;
+    }
+    td {
+      box-sizing: border-box;
+      padding: 0 0.5em;
+    }
+    .lineno {
+      min-width: 2em;
+      text-align: center;
+    }
+    table {
+        border-collapse: collapse;
+    }
 
-  </ol>
+    table, th, td {
+        border: 1px solid black;
+    }
+    tr {
+      pointer-events: all;
+    }
+    #settings-wrapper {
+      max-height: 0;
+      transition: max-height 0.5s;
+      border-bottom: thin solid #555;
+      width: 100%;
+      overflow: hidden;
+    }
+    #settings {
+      box-sizing: border-box;
+      padding: 2em;
+      background-color: #ccc;
+    }
+    .open {
+      max-height: 200px!important;
+    }
+    #settings > span {
+      display: block;
+    }
+    .header-button {
+      height: 100%;
+      max-width: 100px;
+      display: table-cell;
+      vertical-align: middle;
+    }
+    .button-text-wrapper {
+      font-size: 24px;
+      font-family: 'Fjalla One', sans-serif;
+      color: white;
+      cursor: pointer;
+    }
+    .no-link-style {
+      text-decoration: none;
+    }
+  </style>
+  <link href='https://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+  <script type="text/javascript" src="//localhost:8082/socket.io/socket.io.js"></script>
+  <script type="text/javascript" src="eventIcons.js"></script>
+  <script src="/listener_client.js"></script>
+</head>
+<body onload="login()">
+  <div id="header">
+    <div id="header-button-wrapper">
+      <div id="home-button" class="header-button">
+        <a href="/" class="no-link-style">
+          <span class="button-text-wrapper">Home</span>
+        </a>
+      </div>
+      <div id="settings-button" class="header-button" onclick="toggleSettings()">
+        <span class="button-text-wrapper">Settings</span>
+      </div>
+      <div id="search-button" class="header-button" onclick="toggleSearch()">
+        <span class="button-text-wrapper">Search</span>
+      </div>
+    </div>
+  </div>
+  <div id="info">
+
+  </div>
+  <div id="settings-wrapper">
+    <div id="settings"></div>
+  </div>
+  <div id="logs-wrapper">
+    <table id="logs">
+      <tr>
+        <th>Index</th>
+        <th>Type</th>
+        <th>ConnId</th>
+        <th>Tag</th>
+        <th>Arguments</th>
+      </tr>
+    </table>
+  </div>
 </body>
 </html>

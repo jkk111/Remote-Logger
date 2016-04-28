@@ -114,6 +114,8 @@ var logger = {
     for(var i = 0 ; i < keys.length; i++) {
       arr.push(obj[keys[i]]);
     }
+
+    console.log(keys, obj, arr);
     return arr;
   },
   rejectHandler: function(data) {

@@ -31,6 +31,7 @@ function handleConn(socket) {
   console.log(socket.request.headers.referer);
   var logged = 0;
   var roomKey;
+  var connId = "NO_AUTH";
   var authTimer = setTimeout(function() {
     console.log("disconnecting socket %s for inactivity", socket.id);
     socket.disconnect();
@@ -53,13 +54,23 @@ function handleConn(socket) {
       socket.leave(socket.id);
       socket.join(data.key);
       socket.emit("auth", true);
+      if(auth.type === "listener") {
+        console.log("listener auth");
+      }
     } else {
       socket.disconnect();
     }
   });
 
   socket.on("disconnect", function() {
-    io.emit("logEvent", { type: "disco", ts: new Date().getTime()})
+    console.log("cry");
+  });
+  socket.on("disconnect", function() {
+    console.log("cry again");
+  });
+
+  socket.on("disconnect", function() {
+    io.emit("logEvent", { type: "disco", connId: connId, tag: "disconnected", ts: new Date().getTime()})
   })
 
 
@@ -72,6 +83,7 @@ function handleConn(socket) {
      *   arguments: (...<Object>)
      * }
      */
+     console.log(data);
     if(socket.isAuthenticated) {
       console.log(data);
       pushToDb((data.type === "custom" ? data.custom : data.type), data, roomKey);

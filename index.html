@@ -15,8 +15,11 @@
         verbose: true
       });
       document.addEventListener("mousemove", function(e) {
-        remote.log("mousemove", handleEvent(e));
+        // remote.log("mousemove", handleEvent(e));
       })
+      setInterval(function() {
+        remote.log("hello world", "wassup");
+      }, 100)
       remote.log("Startup", "is it working?");
       function getClassString(list, joiner) {
         return `.${list.toString().replace(/ /g, ".")}`
