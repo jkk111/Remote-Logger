@@ -12,7 +12,6 @@ var logger = {
     this.socket.on("connect", this.connectHandler.bind(this));
     this.socket.on("reject", this.rejectHandler.bind(this));
     this.socket.on("disconnect", this.disconnectHandler.bind(this));
-    // this.levels.forEach(this.registerLevel, this.remote);
     this.registerLevels(this.levels);
     if(options.customLevels) {
       if(typeof this.options.customLevels === "string")
@@ -170,12 +169,7 @@ var logger = {
     el.style.maxWidth = "75%";
     el.style.minWidth = "50%";
     el.style.textAlign = "center";
-    el.style.wordBreak = "break-all";
-    // var pre = document.createElement("pre");
-    // pre.innerHTML = message.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    // el.appendChild(pre);
     el.innerHTML = message.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    // this.messageWrapper.prependChild(el);
     this.prepend(this.messageWrapper, el);
     setTimeout(function() {
       el.style.opacity = "1";

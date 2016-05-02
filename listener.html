@@ -8,6 +8,9 @@
       margin: 0;
       background-color: #636363;
     }
+    * {
+      transition: all 1s;
+    }
     img, span {
       height: 1em;
     }
@@ -23,17 +26,33 @@
     }
     #header-button-wrapper {
       height: 100%;
-      display: table;
       text-align: center;
       max-width: 100%;
       min-width: 50%;
       margin: 0 auto;
-      vertical-align: middle;
     }
     #info {
       background-color: #eee;
       height: 100px;
+      transition: height 0.5s;
       border-bottom: thin solid #ccc;
+      text-align: center;
+      margin: auto;
+    }
+    .info-card {
+      font-size: 24px;
+      text-align: center;
+      display: inline-block;
+      transition: all 0.5s;
+      height: 100px;
+      padding: 0 20px;
+      max-width: 300px;
+      margin: auto;
+    }
+    .center-fix {
+      position: relative;
+      top: 50%;
+      transform: translateY(-50%);
     }
     #logs {
       width: 100%;
@@ -56,6 +75,7 @@
       height: 50%;
       margin: 20px 40px;
       overflow: auto;
+      transition: margin 0.4s;
       background-color: #ddd;
     }
     td {
@@ -96,9 +116,9 @@
     }
     .header-button {
       height: 100%;
+      display: inline-block;
+      padding: 0 40px;
       max-width: 100px;
-      display: table-cell;
-      vertical-align: middle;
     }
     .button-text-wrapper {
       font-size: 24px;
@@ -109,33 +129,117 @@
     .no-link-style {
       text-decoration: none;
     }
+    .connId, .type, .tag {
+      text-align: center;
+    }
+    #settings > span {
+      padding: 4px 0;
+    }
+    .search-open {
+      height: 150px!important;
+    }
+    #search-wrapper {
+      height: 0px;
+      overflow: hidden;
+      background-color: #aaa;
+      transition: height 0.5s;
+    }
+    input[type=text] {
+        outline: none;
+        width: 100%;
+        margin: 0 20px;
+        box-sizing: border-box;
+        font-size: 24px;
+        border-width: 10px 10px 10px 0;
+        border-width: 0, 5px, 5px, 5px;
+        border-style: solid;
+        border-color: white;
+        padding: 15px;
+        background: rgba(255,255,255,0.5);
+        margin: 0 0 0 0;
+    }
+    #search {
+      display: flex;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0 5%;
+      position: relative;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    #search-type {
+      min-width: 25%;
+      border: 0;
+    }
+    #search-type:focus {
+     /* border-color: white;
+      outline: none;*/
+    }
+    #search-input {
+      display: flex;
+    }
+    @media(max-width: 1024px) {
+      #logs-wrapper {
+        margin: 0;
+      }
+    }
+    @media(max-width: 750px) {
+      #info {
+        height: 200px;
+      }
+      .info-card {
+        display: block;
+      }
+    }
+    #info-wrapper {
+      height: 100%;
+      display: inline-block;
+    }
   </style>
   <link href='https://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
-  <script type="text/javascript" src="//localhost:8082/socket.io/socket.io.js"></script>
+  <script type="text/javascript" src="/socket.io/socket.io.js"></script>
   <script type="text/javascript" src="eventIcons.js"></script>
   <script src="/listener_client.js"></script>
+  <script type="text/javascript" src="/sizeof.js"></script>
 </head>
 <body onload="login()">
   <div id="header">
     <div id="header-button-wrapper">
       <div id="home-button" class="header-button">
-        <a href="/" class="no-link-style">
-          <span class="button-text-wrapper">Home</span>
-        </a>
+        <div class="button-text-wrapper center-fix">Home</div>
       </div>
       <div id="settings-button" class="header-button" onclick="toggleSettings()">
-        <span class="button-text-wrapper">Settings</span>
+        <div class="button-text-wrapper center-fix">Settings</div>
       </div>
       <div id="search-button" class="header-button" onclick="toggleSearch()">
-        <span class="button-text-wrapper">Search</span>
+        <div class="button-text-wrapper center-fix">Search</div>
       </div>
     </div>
   </div>
   <div id="info">
-
+    <div id="info-wrapper">
+      <div id="connected" class="info-card">
+        <div id="connected-info" class="center-fix">0 Connected Clients</div>
+      </div>
+      <div id="received" class="info-card">
+       <div id="received-info" class="center-fix">0 Messages Received</div>
+      </div>
+    </div>
   </div>
   <div id="settings-wrapper">
     <div id="settings"></div>
+  </div>
+  <div id="search-wrapper">
+    <div id="search">
+      <select id="search-type">
+        <option>String Search</option>
+        <option>Key Search</option>
+        <option>Tag Search</option>
+        <option>ID Search</option>
+        <option>Type Search</option>
+      </select>
+      <input id="search-input" type="text" placeholder="Search">
+    </div>
   </div>
   <div id="logs-wrapper">
     <table id="logs">
@@ -145,6 +249,17 @@
         <th>ConnId</th>
         <th>Tag</th>
         <th>Arguments</th>
+      </tr>
+    </table>
+  </div>
+  <div id="detailed-info">
+    <table id="activity">
+      <tr>
+        <th colspan="2">Frequency</th>
+      </tr>
+      <tr>
+        <th>Connection ID</th>
+        <th>Frequency</th>
       </tr>
     </table>
   </div>

@@ -137,7 +137,7 @@ function handleConn(socket) {
       setImmediate(function() {
         sendToListeners("logEvent", data, roomKey);
       });
-      if(gc && ++logsSinceGc % 100000 === 0) {
+      if(typeof gc != undefined && ++logsSinceGc % 100000 === 0) {
         console.log("Received:", logsSinceGc);
         // gc();
       }
@@ -159,16 +159,16 @@ function isConnEvent(event) {
 function pushToDb(level, data, roomKey) {
   // console.log(clc.magenta.underline(level), clc.yellow(data.tag), data.args);
   // io.to("databaseHandler").emit("logEvent", data);
-  r.table(roomKey).insert({
-    level: level,
-    tag: data.tag || "ERR_NO_TAG",
-    connId: data.connId,
-    args: data.arguments || [],
-    client_ts: data.ts,
-    server_ts: r.now()
-  }).run(conn, function(err, data) {
-    // r.table(roomKey).orderBy(r.desc("server_ts")).skip(MIN_SKIP).delete().run(conn, function(err2, data2) {
-    //   // console.log(err, err2, data, data2)
-    // })
-  })
+  // r.table(roomKey).insert({
+  //   level: level,
+  //   tag: data.tag || "ERR_NO_TAG",
+  //   connId: data.connId,
+  //   args: data.arguments || [],
+  //   client_ts: data.ts,
+  //   server_ts: r.now()
+  // }).run(conn, function(err, data) {
+  //   // r.table(roomKey).orderBy(r.desc("server_ts")).skip(MIN_SKIP).delete().run(conn, function(err2, data2) {
+  //   //   // console.log(err, err2, data, data2)
+  //   // })
+  // })
 }
